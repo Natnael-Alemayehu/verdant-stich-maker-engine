@@ -132,5 +132,100 @@ class VerdantStitch_Maker_Profile {
             $update_data['status']  = 'in_progress';
             $update_data['started_at'] = current_time('mysql', true);
         }
+
+        // Transition: in_progress -> completed.
+        if($completed_steps >= (int) $kit->total_steps) {
+            $update_data['status']          = 'completed';
+            $update_data['completed_at']    = current_time('mysql', true);
+            if( ! $kit->started_at ) {
+                $update_data['started_at'] = current_time('mysql', true);
+            }
+        }
+
+        $this->db->update_kit($kit_row_id, $user_id, $update_data);
+        $this->dn->log_progress( $kit_row_id, $user_id, $completed_steps, $note );
+
+        // Fire action so mastery engine can recalculate.
+        do_action('verdant_project_updated', $user_id);
+
+        return $this->db->get_kit( $kit_row_id, $user_id );
+    }
+
+    /**
+     * Store a milestone image URL.
+     * 
+     * @param int       $kit_row_id
+     * @param int       $user_id
+     * @param string    $image_url
+     * @param int       $step_number 0= general milestone.
+     * @param string    $caption
+     * @return int|WP_Error Inserted image ID or WP_Error.
+     */
+    public function add_milestone_image( int $kit_row_id, int $user_id, string $image_url, int $step_number = 0, string $caption = '' ): int|WP_Error {
+        $kit = $this->db->get_kit($kit_row_id, $user_id);
+        if( ! $kit ) {
+            return new WP_ERROR('kit_not_found', __('Kit not found or access denied.', 'verdant-stitch'), ['status' => 404]);
+        }
+
+        if ( ! $image_id) {
+            return new WP_Error('db_insert_failed', __('Could not store image URL.','verdant-stitch'), ['status'=> 500]);
+        }
+
+        return $image_id;
+    }
+
+    /**
+     * Get progress history + image for a kit.
+     * 
+     * @param int $kit_row_id
+     * @param int $user_id
+     * @param array|WP_Error
+     */
+    public function get_kit_detail(int $kit_row_id, int $user_id): array|WP_Error {
+        $kit = $this->db->get_kit($kit_row_id, $user_id);
+        if ( ! $kit ) {
+            return new WP_Error('kit_not_found', __('Kit not found or access denied.', 'verdant-stitch'), ['status' => 404]);
+        }
+
+        return [
+            'kit'       => $this->format_kit($kit),
+            'history'   => $this->db->get_progress_history($kit_row_id, $user_id),
+            'images'    => $this->db->get_images( $kit_row_id, $user_id ),
+        ];
+    }
+
+    // Helpers
+
+    /**
+     * Format a raw DB kit row for API output.
+     * @param   object  $kit
+     * @return array
+     */
+    public function format_kit( object $kit ): array {
+        return [
+            'id'                => (int)    $kit->id,
+            'kit_id'            =>          $kit->kit_id,
+            'kit_name'          =>          $kit->kit_name,
+            'difficulty'        => (int)    $kit->difficulty,
+            'difficulty_label'  => self::DIFFICULTIES[ (int) $kit->difficulty ] ?? 'Unknown',
+            'status'            =>          $kit->status,
+            'total_steps'       =>          $kit->total_steps,
+            'completed_steps'   =>          $kit->completed_steps,
+            'progress_pct'      =>          $kit->total_steps > 0 ? round(($kit->completed_steps / $kit->total_steps) * 100, 1):0,
+            'started_at'        =>          $kit->started_at,
+            'completed_at'      =>          $kit->completed_at,
+            'created_at'        =>          $kit->created_at,
+        ];
+    }
+
+    /**
+     * return the human-readable label for a mastery level.
+     * 
+     * @param int $level
+     * @return string
+     */
+    public function get_level_label( int $level ): string {
+        $thresholds = get_option( 'verdant_mastery_thresholds', [] );
+        return $thresholds[ $level ][ 'level' ] ?? 'Seedling';
     }
 }

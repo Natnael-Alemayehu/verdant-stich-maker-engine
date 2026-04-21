@@ -250,3 +250,13 @@ The collection includes a full workflow from kit creation to mastery recalculati
 Alternatively, use the built-in **API Tester** in WordPress Admin -> Verdant Stitch -> API Tester for a no-setup test environment.
 
 ---
+
+## Coding Standards
+
+This plugin follows [Wordpress Coding Standards (WPCS)](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/):
+
+- All input sanitised with `sanitize_text_field`, `absint`, `etc_url_raw`, etc.
+- All outputs escaped with `etc_html`, `esc_attr`, `wp_kses`, etc.
+- All DB queries use `$wpdb->prepare()` with placeholders.
+- No direct file I/O; uses WP API exclusively.
+- Autoloaded via `spl_autoloaded_register` - no manual `require` sprawl.
