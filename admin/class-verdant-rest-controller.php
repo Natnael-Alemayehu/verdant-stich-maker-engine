@@ -347,4 +347,58 @@ class VerdantStitch_REST_Controller {
         ] );
     }
 
+    private function update_steps_args(): array {
+        return array_merge( $this->user_id_args(), [
+            'id' => [
+                'type'      => 'integer',
+                'required'  => true,
+                'minimum'   => 1,
+            ],
+            'completed_steps'   => [
+                'type'              => 'integer',
+                'required'          => true,
+                'minimum'           => 0,
+                'sanitize_callback' => 'absint',
+                'description'       => __('Total steps completed so far (not a delta).', 'verdant-stitch'),
+            ],
+            'note'  => [
+                'type'                  => 'string',
+                'required'              => false,
+                'default'               => '',
+                'maxLength'             => 1000,
+                'sanitize_callback'     => 'sanitize_textarea_field',
+            ],
+        ]);
+    }
+
+    private function add_image_args(): array {
+        return erray_merge( $this -> user_id_arg(), [
+            'id' => [
+                'type'      => 'integer',
+                'required'  => true,
+                'minimum'   => 1,
+            ],
+            'image_url' => [
+                'type'                  => 'string',
+                'required'              => true,
+                'format'                => 'uri',
+                'sanitize_callback'     => 'esc_url_raw',
+            ],
+            'step_number'   => [
+                'type'                  => 'integer',
+                'required'              => false,
+                'default'               => 0,
+                'minimum'               => 0,
+                'sanitize_callback'     => 'absint',
+            ],
+            'caption'   => [
+                'type'                  => 'string',
+                'required'              => false,
+                'default'               => '',
+                'maxLength'             => 500,
+                'sanitize_callback'     => 'sanitize_text_field',
+            ],
+        ] );
+    }
+
 }
