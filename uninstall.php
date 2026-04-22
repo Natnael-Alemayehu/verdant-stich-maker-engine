@@ -1,9 +1,9 @@
 <?php
 /**
  * Fired when the plugin is uninstalled.
- * 
+ *
  * Removes all custom tables and options.
- * 
+ *
  * @package VerdantStitch
  */
 
@@ -16,7 +16,7 @@ global $wpdb;
 // Drop custom tables.
 $tables = [
     $wpdb->prefix . 'verdant_kits',
-    $wpdb->prefix . 'verdant_progress_histroy',
+    $wpdb->prefix . 'verdant_progress_history',
     $wpdb->prefix . 'verdant_milestone_images',
     $wpdb->prefix . 'verdant_mastery_scores',
 ];
@@ -34,8 +34,8 @@ $options = [
     'verdant_coupon_expiry_days',
 ];
 
-foreach ( $options as $opt ){
-    delete_option($opt);
+foreach ( $options as $opt ) {
+    delete_option( $opt );
 }
 
 // Clean up user meta.
